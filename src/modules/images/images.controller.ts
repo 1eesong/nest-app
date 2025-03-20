@@ -23,7 +23,7 @@ export class ImagesController {
   @ApiBody({
     description: '이미지 업로드',
     schema: {
-      type: 'obejct',
+      type: 'object',
       properties: {
         file: {
           type: 'string',
