@@ -6,7 +6,7 @@ export class AppConfigService {
   jwtService: string | Buffer<ArrayBufferLike> | undefined;
   constructor(private configService: ConfigService) {}
 
-  get JwtSecret() {
+  get jwtSecret() {
     return this.configService.get<string>('app.jwtSecret');
   }
 

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpStatus,
   Post,
   Res,
@@ -16,9 +17,10 @@ import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { LogInDto } from './dto/log-in.dto';
 import { RequestOrigin } from 'src/decorators/request-origin.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { User } from '../users/entities/user.entity';
 import { RequestUser } from 'src/decorators/request-user.decorator';
+import { GoogleAuthGuard } from './guards/google.guard';
 
 @ApiTags('유저 인증')
 @Controller('auth')
@@ -58,6 +60,30 @@ export class AuthController {
   ) {
     const { accessToken, refreshToken, accessOptions, refreshOptions } =
       await this.authService.logIn(logInDto, origin);
+
+    res.cookie('Authentication', accessToken, accessOptions);
+    res.cookie('Refresh', refreshToken, refreshOptions);
+
+    return res.json({
+      message: '로그인 성공!',
+      accessToken,
+      refreshToken,
+    });
+  }
+
+  @Get('signin/google')
+  @UseGuards(GoogleAuthGuard)
+  googleLogIn() {}
+
+  @Get('signin/google/callback')
+  @UseGuards(GoogleAuthGuard)
+  googleCallback(
+    @RequestUser() user: User,
+    @RequestOrigin() origin: string,
+    @Res() res: Response,
+  ) {
+    const { accessToken, refreshToken, accessOptions, refreshOptions } =
+      this.authService.googleLogin(user.email, origin);
 
     res.cookie('Authentication', accessToken, accessOptions);
     res.cookie('Refresh', refreshToken, refreshOptions);

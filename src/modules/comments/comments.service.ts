@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { Comment } from '../comments/entities/comment.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
-import { UsersService } from '../users/users.service';
 import { PostsService } from '../posts/posts.service';
 import { User } from '../users/entities/user.entity';
 import { UpdateCommentDto } from './dto/update-comment.dto';
@@ -11,7 +10,8 @@ import { UpdateCommentDto } from './dto/update-comment.dto';
 @Injectable()
 export class CommentsService {
   constructor(
-    @InjectRepository(Comment) private commentRepository: Repository<Comment>,
+    @InjectRepository(Comment)
+    private commentRepository: Repository<Comment>,
     private postsService: PostsService,
   ) {}
 
@@ -90,7 +90,7 @@ export class CommentsService {
     //   return comments;
     // }
 
-    const comments = await this.commentRepository
+    const data = await this.commentRepository
       .createQueryBuilder('c')
       .leftJoin('c.user', 'u')
       .leftJoin('c.replies', 'r')
@@ -111,10 +111,12 @@ export class CommentsService {
       ])
       .take(limit)
       .getMany();
-    return comments;
+    return { data };
   }
 
-  findOne() {}
+  findOne(id: number) {
+    return `This action returns a #${id} comment`;
+  }
 
   async updateComment(commentId: string, updateCommentDto: UpdateCommentDto) {
     // const comment = await this.commentRepository.findOne({
@@ -139,16 +141,14 @@ export class CommentsService {
   async removeComment(commentId: string) {
     const comment = await this.commentRepository.findOne({
       where: { id: commentId },
-      relations: ['post'],
+      relations: ['post', 'replies'],
     });
 
     if (!comment) {
       throw new NotFoundException('해당하는 댓글이 없습니다.');
     }
 
-    const result = await this.commentRepository.remove(comment);
-
-    return { message: '댓글이 삭제되었습니다.', result };
+    return await this.commentRepository.remove(comment);
 
     // const result = await this.commentRepository.delete(commentId);
 

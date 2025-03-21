@@ -17,6 +17,8 @@ export class Comment extends BaseEntity {
   @OneToMany(() => Comment, (comment) => comment.parent)
   replies: Comment[];
 
-  @ManyToOne(() => Comment, (comment) => comment.replies)
+  @ManyToOne(() => Comment, (comment) => comment.replies, {
+    onDelete: 'CASCADE',
+  })
   parent: Comment;
 }

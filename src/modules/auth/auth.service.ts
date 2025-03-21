@@ -1,14 +1,13 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { UsersService } from '../users/users.service';
-import { comparePassword, encryptPassword } from '../../utils/password-util';
+import { comparePassword } from '../../utils/password-util';
 import { ResponseRegisterDto } from './dto/response-register.dto';
 import { LogInDto } from './dto/log-in.dto';
 import { JwtService } from '@nestjs/jwt';
 import { CookieOptions } from 'express';
 import { AppConfigService } from 'src/config/app/config.service';
 import { S3Service } from '../s3/s3.service';
-import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -31,30 +30,18 @@ export class AuthService {
       throw new UnauthorizedException(
         '이메일 또는 패스워드가 잘못 되었습니다.',
       );
+    return this.makeJwtToken(logInDto.email, origin);
+  }
 
-    const { accessToken, accessOptions } = this.setJwtAccessToken(
-      logInDto.email,
-      origin,
-    );
-
-    const { refreshToken, refreshOptions } = this.setJwtRefreshToken(
-      logInDto.email,
-      origin,
-    );
-
-    return {
-      accessToken,
-      refreshToken,
-      accessOptions,
-      refreshOptions,
-    };
+  googleLogin(email: string, origin: string) {
+    return this.makeJwtToken(email, origin);
   }
 
   setJwtAccessToken(email: string, requestDomain: string) {
     const payload = { sub: email };
     const maxAge = 3600 * 1000;
     const accessToken = this.jwtService.sign(payload, {
-      secret: this.appConfigService.jwtService,
+      secret: this.appConfigService.jwtSecret,
       expiresIn: maxAge,
     });
     return {
@@ -67,12 +54,31 @@ export class AuthService {
     const payload = { sub: email };
     const maxAge = 30 * 24 * 3600 * 1000;
     const refreshToken = this.jwtService.sign(payload, {
-      secret: this.appConfigService.jwtService,
+      secret: this.appConfigService.jwtSecret,
       expiresIn: maxAge,
     });
     return {
       refreshToken,
       refreshOptions: this.setCookieOption(maxAge, requestDomain),
+    };
+  }
+
+  makeJwtToken(email: string, origin: string) {
+    const { accessToken, accessOptions } = this.setJwtAccessToken(
+      email,
+      origin,
+    );
+
+    const { refreshToken, refreshOptions } = this.setJwtRefreshToken(
+      email,
+      origin,
+    );
+
+    return {
+      accessToken,
+      refreshToken,
+      accessOptions,
+      refreshOptions,
     };
   }
 

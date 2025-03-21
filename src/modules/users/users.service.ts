@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
+import { RegisterType, User } from './entities/user.entity';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -27,5 +27,14 @@ export class UsersService {
       ); // 미인증
     // new ForbiddenException(); // 인증되었으나 접근 거부
     return user;
+  }
+
+  findUserBySocialId(socialId: string, registerType: RegisterType) {
+    return this.userRepository.findOne({
+      where: {
+        socialId,
+        registerType,
+      },
+    });
   }
 }
