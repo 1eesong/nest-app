@@ -35,4 +35,10 @@ export const AppDataSource = new DataSource({
   entities: [entity],
   migrations: [migration],
   subscribers: [PostViewSubscriber, CommentCountSubscriber, UserSubscriber],
+  ssl:
+    dbConfigService.nodeEnv === 'local'
+      ? false
+      : {
+          rejectUnauthorized: false,
+        },
 });
